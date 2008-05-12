@@ -1,14 +1,15 @@
 /*
- * BoD winsupermaximize v1.00.
+ * BoD winsupermaximize v1.01.
  *
  * This program and its source are in the public domain.
  * Contact BoD@JRAF.org for more information.
  *
  * Version history:
+ * 2008-05-12: v1.01
  * 2008-05-10: v1.00
  */
 
-#SingleInstance force
+#SingleInstance ignore
 
 /*
  * Tray menu.
@@ -19,10 +20,14 @@ Menu, tray, Add, About..., menuAbout
 Menu, tray, Add, Exit, menuExit
 Menu, tray, Default, Super maximize window
 
-Goto, main
+/*
+ * Bind to Win-F11.
+ */
+#F11::superMaximize()
+
 
 menuAbout:
-	MsgBox, 8256, About, BoD winsupermaximize v1.00.`n`nThis program and its source are in the public domain.`nContact BoD@JRAF.org for more information.
+	MsgBox, 8256, About, BoD winsupermaximize v1.01.`n`nThis program and its source are in the public domain.`nContact BoD@JRAF.org for more information.
 return
 
 menuExit:
@@ -30,49 +35,39 @@ menuExit:
 return
 
 menuSuperMaximize:
-	Send !{Tab} ; go to previously active window (the current active window is the taskbar)
+	Send !{Tab} ; go to previously active window (the currently active window is the taskbar !)
 	Sleep, 200
-	Goto, main
+	superMaximize()
 return
 
 
 /*
- * Main program.
- */
-main:
-
-/*
- * Get the size of the title bar.
- */
-SysGet, titleBarSize, 29 ; title bar + y border size
-SysGet, yBoderSize, 33
-titleBarSize := titleBarSize - yBoderSize
-
-
-/*
- * Do the actual job.
+ * Super Maximizes the currently active window.
  */
 superMaximize() {
-	global titleBarSize
+	global
+
 	WinActive("A")
-	WinGetPos, , y
-	if (y = -titleBarSize) {
+	WinGet, winId, ID
+
+	if (isSuperMaximized_%winId% = 1) {
 		; already supermaximized: we restore the window
-		WinRestore
+		WinSet, Style, +0x800000
+		WinMove, , , orig_%winId%_x, orig_%winId%_y, orig_%winId%_width, orig_%winId%_height
+		if (orig_%winId%_wasMaximized) {
+			WinMaximize
+		}
+		isSuperMaximized_%winId% = 0
 	} else {
 		; not supermaximized: we supermaximize it
-		WinMaximize
-		WinGetPos, x, y, width, height
-		WinMove, , , x, -titleBarSize, width, A_ScreenHeight + titleBarSize - y - 1 ; 1 pixel less, to be able to use the auto-hide taskbar
+		WinGet, orig_%winId%_wasMaximized, MinMax
+		if (orig_%winId%_wasMaximized = 1) {
+			WinRestore
+		}
+		WinGetPos, orig_%winId%_x, orig_%winId%_y, orig_%winId%_width, orig_%winId%_height ; store the old bounds
+		WinSet, Style, -0x800000
+		WinMove, , , 0, -4, A_ScreenWidth, A_ScreenHeight + 4 - 1 ; 1 pixel less, to be able to use the auto-hide taskbar
+		isSuperMaximized_%winId% = 1
 	}
 }
 
-/*
- * Do it.
- */
-superMaximize()
-
-/*
- * Bind to Win-F11.
- */
-#F11::superMaximize()
