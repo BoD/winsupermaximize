@@ -19,7 +19,7 @@ Limitations:
   * Tested only under Windows XP.
 
 Note: this is actually an AutoHotkey script, compiled into an executable file 
-      (see http://www.autohotkey.com/.)
+      (see http://www.autohotkey.com/).
 
 Contact the author: BoD@JRAF.org.
 
